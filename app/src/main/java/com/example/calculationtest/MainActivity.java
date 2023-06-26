@@ -1,32 +1,27 @@
 package com.example.calculationtest;
 
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.databinding.DataBindingUtil;
-import androidx.lifecycle.SavedStateViewModelFactory;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
-import androidx.navigation.fragment.NavHostFragment;
-import androidx.navigation.ui.NavigationUI;
-
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
 
-import com.example.calculationtest.databinding.ActivityMainBinding;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.lifecycle.SavedStateViewModelFactory;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.NavController;
+import androidx.navigation.fragment.NavHostFragment;
+import androidx.navigation.ui.NavigationUI;
 
 public class MainActivity extends AppCompatActivity {
 
     NavController controller;
-
+    MyViewModel myViewModel;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        MyViewModel myViewModel;
         myViewModel = new ViewModelProvider(this,
                 new SavedStateViewModelFactory(this.getApplication(),
                         this)).get(MyViewModel.class);
@@ -47,6 +42,9 @@ public class MainActivity extends AppCompatActivity {
             builder.setPositiveButton(R.string.dialog_positive_message, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
+                    myViewModel.getCurrentScore().setValue(0);
+                    myViewModel.getUserInput().setValue("Empty");
+                    myViewModel.saveUserInput();
                     controller.navigateUp();
                 }
             });

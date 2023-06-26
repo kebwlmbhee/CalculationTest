@@ -1,6 +1,10 @@
 package com.example.calculationtest;
 
 import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.databinding.DataBindingUtil;
@@ -10,13 +14,19 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-
 import com.example.calculationtest.databinding.FragmentQuestionBinding;
 
+import java.util.Objects;
+
 public class QuestionFragment extends Fragment {
+
+    private String TAG = "MyTag";
+    private MyViewModel myViewModel;
+
+    // size can changeable
+    final StringBuilder builder = new StringBuilder();
+    private boolean isSubmit = false;
+    private String userInput;
 
 
     public QuestionFragment() {
@@ -26,23 +36,30 @@ public class QuestionFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        MyViewModel myViewModel;
         // check if MyViewModel class exist, if true, return that instance
         myViewModel = new ViewModelProvider(requireActivity(),
-        // else, create the instance
-                      new SavedStateViewModelFactory(requireActivity().getApplication(),
-                                                     requireActivity())).get(MyViewModel.class);
+                // else, create the instance
+                new SavedStateViewModelFactory(requireActivity().getApplication(),
+                        requireActivity())).get(MyViewModel.class);
         FragmentQuestionBinding binding;
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_question, container, false);
         binding.setData(myViewModel);
         binding.setLifecycleOwner(requireActivity());
 
-        // size can changeable
-        final StringBuilder builder = new StringBuilder();
+        if(!Objects.requireNonNull(myViewModel.getUserInput().getValue()).isEmpty()) {
+            builder.append(myViewModel.getUserInput().getValue());
+            binding.textView9.setText(builder.toString());
+            userInput = builder.toString();
+        }
+        else {
+            binding.textView9.setText(R.string.input_indicator);
+            userInput = "";
+        }
 
         View.OnClickListener listener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                isSubmit = false;
                 if(v.getId() == R.id.button0)
                     builder.append("0");
                 else if(v.getId() == R.id.button1)
@@ -70,6 +87,8 @@ public class QuestionFragment extends Fragment {
                     binding.textView9.setText(getString(R.string.input_indicator));
                 else
                     binding.textView9.setText(builder.toString());
+
+                userInput = builder.toString();
             }
         };
 
@@ -89,13 +108,16 @@ public class QuestionFragment extends Fragment {
             @SuppressWarnings("ConstantConditions")
             @Override
             public void onClick(View v) {
+                userInput = "";
                 if(builder.length() == 0)
                     builder.append(-1);
+                // if correct
                 if(Integer.valueOf(builder.toString()).intValue() == myViewModel.getAnswer().getValue()) {
                     myViewModel.answerCorrect();
                     builder.setLength(0);
                     binding.textView9.setText(R.string.answer_correct_message);
                 }
+                // if error
                 else {
                     NavController controller = Navigation.findNavController(v);
                     // new record
@@ -104,8 +126,12 @@ public class QuestionFragment extends Fragment {
                         myViewModel.win_flag = false;
                         myViewModel.save();
                     }
-                    else
+                    else {
                         controller.navigate(R.id.action_questionFragment_to_loseFragment);
+                    }
+                    myViewModel.getUserInput().setValue("");
+                    Log.d(TAG, "onClick: " + myViewModel.getUserInput().getValue());
+                    myViewModel.saveUserInput();
                 }
             }
         });
@@ -114,5 +140,19 @@ public class QuestionFragment extends Fragment {
 
         // Inflate the layout for this fragment
 //        return inflater.inflate(R.layout.fragment_question, container, false);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        // when back to titleFragment (set Empty String in MainActivity)
+        if(myViewModel.getUserInput().getValue().equals("Empty")) {
+            myViewModel.getUserInput().setValue("");
+            myViewModel.saveUserInput();
+        }
+        else if(!builder.toString().equals(myViewModel.getUserInput().getValue())) {
+            myViewModel.getUserInput().setValue(userInput);
+            myViewModel.saveUserInput();
+        }
     }
 }

@@ -3,7 +3,6 @@ package com.example.calculationtest;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -23,6 +22,8 @@ public class MyViewModel extends AndroidViewModel {
     final private static String KEY_ANSWER = "key_answer";
     final private static String SAVE_SHP_DATA_NAME = "save_shp_data_name";
     final private static String KEY_CURRENT_SCORE = "key_current_score";
+
+    final private static String KEY_USER_INPUT = "key_user_input";
     boolean win_flag;
 
     public MyViewModel(@NonNull Application application, SavedStateHandle handle) {
@@ -37,6 +38,7 @@ public class MyViewModel extends AndroidViewModel {
             handle.set(KEY_OPERATOR, 0);
             handle.set(KEY_ANSWER, 0);
             handle.set(KEY_CURRENT_SCORE, 0);
+            handle.set(KEY_USER_INPUT, "");
         }
         this.handle = handle;
     }
@@ -63,6 +65,10 @@ public class MyViewModel extends AndroidViewModel {
 
     public MutableLiveData<Integer> getAnswer() {
         return handle.getLiveData(KEY_ANSWER);
+    }
+
+    public MutableLiveData<String> getUserInput() {
+        return handle.getLiveData(KEY_USER_INPUT);
     }
 
     void generator() {
@@ -108,6 +114,13 @@ public class MyViewModel extends AndroidViewModel {
         SharedPreferences shp = getApplication().getSharedPreferences(SAVE_SHP_DATA_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = shp.edit();
         editor.putInt(KEY_HIGH_SCORE, getHighScore().getValue());
+        editor.apply();
+    }
+
+    void saveUserInput() {
+        SharedPreferences shp = getApplication().getSharedPreferences(SAVE_SHP_DATA_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = shp.edit();
+        editor.putString(KEY_USER_INPUT, getUserInput().getValue());
         editor.apply();
     }
 
